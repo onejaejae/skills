@@ -1,7 +1,8 @@
 ---
 name: task-definition-generator
 description: >
-  새로운 개발 작업을 시작하며 구조화된 Task 분석이 필요할 때 사용합니다.
+  Use when starting a new development task and need structured task analysis.
+  Trigger: new task, task analysis, task definition, 태스크 정의, 작업 분석.
 ---
 
 # Task Definition Generator
@@ -35,8 +36,8 @@ Task 키워드를 기반으로 관련 파일을 동적으로 탐색한다.
 2. **도메인 파일 매칭**: Glob으로 관련 도메인 파일 패턴 매칭
 3. **핵심 파일 확인**: Read로 주요 파일 내용 파악
 4. **계층 추적 (하향식)**: 영향 범위를 아래 계층으로 확장
-   - 예: Service 수정 -> 의존하는 Repository 확인
-   - 예: Model 변경 -> 해당 모델 사용하는 Repository, Schema 확인
+   - 예: Service 수정 → 의존하는 Repository 확인
+   - 예: Model 변경 → 해당 모델 사용하는 Repository, Schema 확인
 5. **역방향 추적 (상향식)**: 변경의 영향을 받는 상위 계층 및 관련 파일 확인
    - 호출자 역추적: Grep으로 함수/클래스명을 검색하여 호출하는 위치 파악
    - 기존 테스트 역추적: `test_*.py` 패턴으로 영향 받는 테스트 파일 확인
@@ -143,3 +144,4 @@ Task 키워드를 기반으로 관련 파일을 동적으로 탐색한다.
 - 코드베이스를 **실제로 탐색**한 결과를 기반으로 영향 파일을 작성한다. 추측하지 않는다.
 - 존재하지 않는 파일은 "생성"으로, 기존 파일은 "수정"으로 명확히 구분한다.
 - 영향 분석의 "의존성" 항목에는 구체적인 클래스명/메서드명을 포함한다.
+- **영향 받는 파일에 테스트 파일(`tests/`)을 포함하지 않는다.** 테스트는 워크플로우 Phase 4에서 `/test` 커맨드가 전담하므로, Task Definition과 Plan의 범위 밖이다.
