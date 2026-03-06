@@ -16,7 +16,7 @@
 workflow [task-description]
 ```
 
-### 워크플로우 (8 Phase)
+### 워크플로우 (9 Phase)
 
 ```text
 Phase 0: Task 분석
@@ -40,7 +40,9 @@ Phase 5: 리뷰 (code-reviewer)
     ↓
 Phase 6: 문서화 (Notion + Postman, 조건부)
     ↓
-Phase 7: PR 생성
+Phase 7: PR 생성 (gh-draft-pr-create)
+    ↓
+Phase 8: 작업 완료 리포트 (work-report)
 ```
 
 ### 포함된 Skills
@@ -56,11 +58,14 @@ Phase 7: PR 생성
 | test-planner | 테스트 시나리오 생성 |
 | test-generator | 테스트 코드 생성 |
 | test-healer | 테스트 실행 및 자동 수정 |
+| gh-draft-pr-create | GitHub Draft PR 생성 |
+| work-report | 작업 완료 리포트 생성 |
 
 ### 포함된 Commands
 
 | 커맨드 | 용도 |
 |-------|------|
+| workflow | 전체 개발 워크플로우 실행 (Phase 0~8) |
 | test | 테스트 파이프라인 실행 (Phase 4) |
 
 ### 참조 Agent
@@ -78,9 +83,10 @@ Phase 7: PR 생성
 - 테스트 전용 Phase 분리 (Phase 4)
 - 리뷰어 관점의 코드 리뷰 (Phase 5)
 - API 문서 자동화 (Notion, Postman)
-- Draft PR 생성 및 assignee 자동 할당
+- Draft PR 생성 및 assignee 자동 할당 (Phase 7)
+- 작업 완료 리포트 자동 생성 (Phase 8)
 
 ## 버전
 
-- Current: 2.0.0
+- Current: 2.1.0
 - [CHANGELOG](./CHANGELOG.md)
