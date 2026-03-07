@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-03-07
+
+### Added
+- **Phase 3 Regression Test 단계 추가**
+  - 모든 Step 완료 후 `ENV=test poetry run pytest tests/ -v --tb=short` 전체 테스트 실행
+  - 실패 시 최대 3회 수정 루프 (수정 → 재실행)
+  - 3회 초과 시 "무시" 또는 "중단" 선택
+- **Phase 4 구현 수정 시 lint 단계 추가**
+  - `/test` 실패로 구현 수정 시: 수정 → lint → 커밋 → Regression Test → Phase 4 재시작
+- **allowed-tools에 `AskUserQuestion`, `Skill`, `Agent` 추가**
+
+### Changed
+- **Phase 4 "Phase 3 복귀" 경로 명확화**
+  - 기존: "Phase 3으로 돌아갑니다" (모호)
+  - 변경: "수정 → lint → 커밋 → Regression Test 통과 확인 후 Phase 4 재시작" (명확한 절차)
+
+### Removed
+- **plan-reviewer에서 "기존 테스트 영향" 체크리스트 항목 제거**
+  - Phase 3 Regression Test가 기존 테스트 보호 역할을 대체
+  - 리스크 분석 및 출력 형식에서 관련 섹션 제거
+
 ## [2.0.0] - 2026-02-27
 
 ### Added
