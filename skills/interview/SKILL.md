@@ -8,12 +8,27 @@ allowed-tools: "AskUserQuestion, Write, Read, Glob, Grep"
 
 Extract detailed, actionable specs by interviewing the user instead of receiving passive requirements.
 
+## CRITICAL: AskUserQuestion 턴 분리 규칙
+
+**AskUserQuestion은 이 스킬이 로드된 턴(같은 assistant turn)에서 절대 호출하지 마세요.**
+
+Skill tool로 이 스킬이 로드되면, 같은 턴에서 AskUserQuestion을 호출할 경우 사용자에게 질문 UI가 표시되지 않고 빈 응답으로 자동 처리됩니다 (Claude Code 플랫폼 제약).
+
+**필수 절차:**
+1. Phase 1 (코드베이스 스캔)을 수행한다
+2. 스캔 결과와 인터뷰 방향을 **텍스트로 출력**한다
+3. **반드시 STOP하고 사용자 응답을 기다린다**
+4. 사용자가 응답한 **다음 턴**에서 AskUserQuestion을 사용하여 Phase 2를 시작한다
+
+이 규칙을 어기면 사용자가 질문을 볼 수 없고, 인터뷰가 진행되지 않습니다.
+
 ## Workflow
 
 1. Analyze the topic from $ARGUMENTS (or ask if not provided)
 2. Scan the codebase to understand current implementation
-3. Conduct multi-round interview using AskUserQuestion
-4. Write the final spec to a file
+3. **Output findings and STOP** — wait for user response
+4. Conduct multi-round interview using AskUserQuestion (next turn)
+5. Write the final spec to a file
 
 ## Interview Process
 
@@ -30,7 +45,20 @@ If the topic doesn't fit neatly, adapt freely. These categories are guides, not 
 
 Scan the codebase (Read, Glob, Grep) to understand the current implementation context. This grounds your questions in the user's actual code — making them specific and avoiding questions the codebase already answers.
 
+**Phase 1 완료 후 반드시 다음을 출력하고 STOP하세요:**
+
+> **인터뷰 준비 완료**
+>
+> 카테고리: [New feature / Refactoring / Bug analysis / Architecture design]
+> 코드베이스 스캔 결과: [주요 발견 사항 요약]
+>
+> 다음 턴에서 본격적인 인터뷰를 시작하겠습니다. "시작"이라고 입력하세요.
+
+**이 시점에서 AskUserQuestion을 호출하지 마세요. 반드시 사용자의 응답을 기다리세요.**
+
 ### Phase 2: Deep Interview
+
+**사용자가 응답한 후 이 Phase를 시작하세요.** AskUserQuestion을 사용하여 인터뷰를 진행합니다.
 
 Conduct the interview using AskUserQuestion. Guidelines:
 
