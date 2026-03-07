@@ -32,7 +32,7 @@ Phase 2: Docs 생성 및 브랜치 준비
     ├── Step 2.0: Docs 페이지 생성 (조건부)
     └── Step 2.1: 브랜치 준비
     ↓
-Phase 3: 개발 (Step별 구현 + Lint + 커밋)
+Phase 3: 개발 (Step별 구현 + Lint + 커밋 + Regression Test)
     ↓
 Phase 4: 테스트 (/test command)
     ↓
@@ -80,6 +80,7 @@ Phase 8: 작업 완료 리포트 (work-report)
 - 각 Phase마다 사용자 확인
 - 역인터뷰 기반 요구사항 추출 (Phase 0)
 - Task Definition + Plan 자동 생성 및 검증
+- Phase 3 완료 전 Regression Test로 기존 테스트 보호 (최대 3회 수정)
 - 테스트 전용 Phase 분리 (Phase 4)
 - 리뷰어 관점의 코드 리뷰 (Phase 5)
 - API 문서 자동화 (Notion, Postman)
