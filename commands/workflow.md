@@ -20,6 +20,9 @@ $ARGUMENTS
 
 [interview] skill을 실행하여 raw 요청사항을 구체화합니다.
 
+**CRITICAL: Skill tool과 AskUserQuestion 턴 분리**
+Skill tool로 interview를 호출한 후, interview 스킬이 코드베이스 스캔 결과를 텍스트로 출력하고 사용자 응답을 기다립니다. 사용자가 응답한 다음 턴에서 AskUserQuestion으로 인터뷰를 시작합니다. 같은 턴에서 Skill 호출과 AskUserQuestion을 함께 사용하면 AskUserQuestion UI가 사용자에게 표시되지 않습니다.
+
 - 최종 산출물: `specs/{topic}.md` 파일
 
 ### Step 0.1: Task Definition 생성
