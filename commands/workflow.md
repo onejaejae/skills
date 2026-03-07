@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, AskUserQuestion, Skill, Agent
 argument-hint: [task-description]
 description: 전체 개발 워크플로우를 단계별로 진행합니다. 각 Phase마다 사용자 확인을 받습니다.
 ---
