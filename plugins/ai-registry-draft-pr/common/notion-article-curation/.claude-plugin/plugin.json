@@ -1,0 +1,5 @@
+{
+  "name": "notion-article-curation",
+  "description": "Notion AI Articles Curation DB에 아티클 링크를 추가하고, Key Insight/Summary를 자동 생성하는 플러그인",
+  "version": "1.0.0"
+}

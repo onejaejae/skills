@@ -1,0 +1,25 @@
+{
+  "name": "multi-model-review",
+  "version": "1.0.0",
+  "description": "Multi-Model Code Review - 여러 AI 모델을 활용한 병렬 PR 리뷰",
+  "main": "scripts/review-job.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "review": "bash scripts/review.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "code-review",
+    "multi-model",
+    "ai",
+    "claude",
+    "gemini"
+  ],
+  "author": "khc-dp",
+  "license": "ISC",
+  "dependencies": {
+    "yaml": "^2.8.2"
+  }
+}

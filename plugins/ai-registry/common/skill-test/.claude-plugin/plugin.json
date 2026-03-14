@@ -1,0 +1,5 @@
+{
+  "name": "skill-test",
+  "description": "TDD 기반 스킬 테스트 - subagent를 활용한 pressure scenario 테스트 및 검증",
+  "version": "1.0.0"
+}

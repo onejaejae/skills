@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Multi-Model Review Output",
+  "description": "각 AI 모델의 코드 리뷰 결과 스키마",
+  "type": "object",
+  "required": ["comments", "recommendation"],
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "전체 리뷰 요약 (1-2 문장)"
+    },
+    "comments": {
+      "type": "array",
+      "description": "개별 리뷰 코멘트 목록",
+      "items": {
+        "type": "object",
+        "required": ["priority", "file", "line", "message"],
+        "properties": {
+          "priority": {
+            "type": "string",
+            "enum": ["P1", "P2", "P3", "P4", "P5"],
+            "description": "우선순위: P1(필수수정) ~ P5(참고)"
+          },
+          "file": {
+            "type": "string",
+            "description": "파일 경로 (diff 기준)"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "라인 번호"
+          },
+          "endLine": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "끝 라인 번호 (범위 지정 시)"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["security", "performance", "quality", "testing", "docs"],
+            "description": "리뷰 카테고리"
+          },
+          "message": {
+            "type": "string",
+            "description": "문제 설명"
+          },
+          "suggestion": {
+            "type": "string",
+            "description": "개선 제안 (선택)"
+          },
+          "codeSnippet": {
+            "type": "string",
+            "description": "관련 코드 스니펫 (선택)"
+          },
+          "reasoning": {
+            "type": "object",
+            "description": "5단계 추론 체인 (P1-P3)",
+            "properties": {
+              "currentCode": { "type": "string", "description": "문제 코드 스니펫" },
+              "rootCause": { "type": "string", "description": "문제 원인 설명" },
+              "impact": { "type": "string", "description": "배포 시 영향" },
+              "solution": { "type": "string", "description": "수정 코드" },
+              "benefit": { "type": "string", "description": "수정 이유" }
+            },
+            "additionalProperties": false
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "이슈 확신도"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": ["APPROVE", "COMMENT", "REQUEST_CHANGES"],
+      "description": "전체 리뷰 권장 액션"
+    },
+    "stats": {
+      "type": "object",
+      "description": "리뷰 통계",
+      "properties": {
+        "totalComments": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "byPriority": {
+          "type": "object",
+          "properties": {
+            "P1": { "type": "integer", "minimum": 0 },
+            "P2": { "type": "integer", "minimum": 0 },
+            "P3": { "type": "integer", "minimum": 0 },
+            "P4": { "type": "integer", "minimum": 0 },
+            "P5": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "byCategory": {
+          "type": "object",
+          "properties": {
+            "security": { "type": "integer", "minimum": 0 },
+            "performance": { "type": "integer", "minimum": 0 },
+            "quality": { "type": "integer", "minimum": 0 },
+            "testing": { "type": "integer", "minimum": 0 },
+            "docs": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

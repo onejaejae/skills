@@ -1,0 +1,125 @@
+# Multi-Model Code Review Configuration
+# 여러 AI 모델을 활용한 병렬 코드 리뷰 설정
+
+review:
+  # 리뷰에 참여하는 AI 모델들
+  # 각 모델은 모든 관점(보안, 성능, 품질, 테스트)에서 전체 리뷰 수행
+  #
+  # Member 설정:
+  #   - name: 모델 식별자
+  #   - command: CLI 실행 명령어
+  #   - weight: consensus 계산 시 가중치 (기본 1.0)
+  #   - focus: 특화 영역 배열 (선택사항)
+  #     가능한 값: security, performance, architecture, bugs, patterns, testing, memory, quality
+  #   - strengths: 모델의 강점 설명 (프롬프트에 포함됨)
+  members:
+    - name: claude
+      command: "claude -p --output-format json"
+      weight: 1.2             # Host 모델, 가중치 높게
+      emoji: "🤖"
+      color: "purple"
+      focus: [all]            # 전체 리뷰 (모든 관점에서 균형 있게)
+
+    - name: gemini
+      command: "gemini"
+      weight: 1.0
+      emoji: "✨"
+      color: "blue"
+      focus: [all]            # 전체 리뷰 (모든 관점에서 균형 있게)
+
+    - name: codex
+      command: "codex exec"
+      weight: 1.0
+      emoji: "🧠"
+      color: "green"
+      focus: [all]            # 전체 리뷰 (모든 관점에서 균형 있게)
+
+  # 실행 설정
+  settings:
+    timeout: 600              # 모델당 타임아웃 (초) - gemini 느린 응답 대응
+    parallel: true            # 병렬 실행 (false면 순차)
+    min_consensus: 2          # 2개 이상 모델이 동의하면 우선순위 상향
+    exclude_chairman: false   # claude도 worker로 참여 (3개 모델 병렬 실행)
+    boost_limit: P2           # P2 이상은 부스트하지 않음 (이미 중요)
+                              # P3~P5만 consensus boost 적용
+                              # 3+ 모델 동의: +2 레벨 (P5→P3, P4→P2 불가→P3)
+                              # 2 모델 동의 또는 weighted >= 2.0: +1 레벨
+
+  # 출력 설정
+  output:
+    format: "json"            # json | markdown
+    deduplicate: true         # 중복 코멘트 제거
+    priority_order:           # 우선순위 정렬 순서
+      - "P1"
+      - "P2"
+      - "P3"
+      - "P4"
+      - "P5"
+    # 마크다운 출력 상세도 설정
+    verbosity: "standard"     # minimal | standard | detailed
+    show_value_proposition: true    # 멀티모델 가치 섹션 표시
+    show_cross_review_highlights: true  # 교차 검토 하이라이트 섹션 표시
+    show_priority_evolution: true   # 우선순위 변경 이력 표시
+    show_model_perspectives: true   # 모델별 관점 표시 (코멘트 내)
+
+  # 종합 설정
+  synthesis:
+    chairman: "claude"        # 최종 종합을 담당하는 모델
+    strategy: "ai_merge"      # merge: 알고리즘 기반 병합 (빠름, 비용 없음)
+                              # ai_merge: AI 기반 의미 종합 (정확함, API 호출 추가)
+    timeout: 120              # Worker 모델 타임아웃 (초)
+    chairman_timeout: 480     # Chairman 전용 타임아웃 (초) - API 지연 대응
+    skip_chairman_on_approve: false  # 전원 APPROVE면 Chairman 스킵
+
+  # 리뷰 관점 (모든 모델이 이 관점들을 사용)
+  perspectives:
+    - name: security
+      description: "보안 취약점 (인젝션, XSS, 인증, 권한 등)"
+      enabled: true
+
+    - name: performance
+      description: "성능 이슈 (N+1, 불필요한 연산, 메모리 등)"
+      enabled: true
+
+    - name: quality
+      description: "코드 품질 (가독성, 유지보수성, 패턴 등)"
+      enabled: true
+
+    - name: testing
+      description: "테스트 커버리지 및 품질"
+      enabled: true
+
+    - name: docs
+      description: "문서화 관련"
+      enabled: false          # 기본 비활성화
+
+  # 교차 검토 설정 (Cross-Review Architecture)
+  # 모든 P1-P3 발견에 대해 다른 모델들이 검토하여 신뢰도 점수 부여
+  cross_review:
+    enabled: true                     # 교차 검토 모드 활성화
+    scope:
+      priorities: ["P1", "P2", "P3"]  # 검토 대상 우선순위
+    require_all_votes: true           # 모든 발견에 대해 vote 필수
+    validation_threshold: 0.67        # 신뢰도 임계값 (2/3 = 67%)
+    timeout: 360                      # 교차 검토 패스 타임아웃 (초) - gemini 느린 응답 대응
+
+  # 파일 컨텍스트 설정
+  # 변경된 파일의 전체 코드를 리뷰어에게 제공하여 오탐 감소
+  file_context:
+    enabled: true
+    max_file_size: 30000             # 파일당 최대 글자 수 (초과 시 truncate)
+    max_total_size: 200000           # 전체 파일 컨텍스트 최대 글자 수
+    exclude_patterns:                # 전체 코드 제공 불필요한 파일
+      - "*.lock"
+      - "*.min.js"
+      - "*.min.css"
+      - "*.generated.*"
+      - "package-lock.json"
+      - "yarn.lock"
+      - "pnpm-lock.yaml"
+
+# GitHub 연동 설정
+github:
+  auto_submit: false          # true면 승인 없이 자동 제출
+  review_type: "COMMENT"      # APPROVE | COMMENT | REQUEST_CHANGES
+  add_line_comments: true     # 라인별 코멘트 추가

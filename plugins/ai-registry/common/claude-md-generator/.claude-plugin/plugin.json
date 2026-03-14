@@ -1,0 +1,5 @@
+{
+  "name": "claude-md-generator",
+  "description": "CLAUDE.md 자동 생성 플러그인",
+  "version": "1.0.0"
+}

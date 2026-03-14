@@ -1,0 +1,5 @@
+{
+  "name": "workflow-bundle",
+  "description": "통합 개발 워크플로우 (workflow command + 의존 skills)",
+  "version": "2.1.0"
+}

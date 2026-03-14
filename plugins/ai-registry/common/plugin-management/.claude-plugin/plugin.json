@@ -1,0 +1,5 @@
+{
+  "name": "plugin-management",
+  "description": "Claude Code 플러그인 생성 및 업데이트 관리",
+  "version": "1.2.0"
+}

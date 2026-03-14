@@ -1,0 +1,5 @@
+{
+  "name": "spec-pipeline",
+  "description": "3단계 기획 파이프라인 (spec-interview → spec-generator → spec-reviewer). 기획팀의 아이디어를 개발 Ready 기획서로 변환한다.",
+  "version": "1.0.0"
+}

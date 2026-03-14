@@ -1,0 +1,5 @@
+{
+  "name": "multi-model-review",
+  "description": "여러 AI 모델(Claude, Gemini, Codex)을 활용한 병렬 코드 리뷰 및 교차 검증",
+  "version": "1.4.0"
+}

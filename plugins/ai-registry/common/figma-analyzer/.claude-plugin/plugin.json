@@ -1,0 +1,5 @@
+{
+  "name": "figma-analyzer",
+  "description": "Figma 디자인 분석을 통한 제품/도메인 이해 - MCP 및 수동 스크린샷 지원",
+  "version": "1.0.0"
+}
