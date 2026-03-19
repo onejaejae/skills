@@ -48,6 +48,7 @@ description: >
 | `--type` | X | `신규 기능` | 작업 유형 (쉼표 구분 multi_select) |
 | `--epic` | X | env `NOTION_EPIC_ID` | 에픽 relation ID |
 | `--dod` | X | - | Definition of Done |
+| `--date` | X | 오늘 (`yyyy-mm-dd`) | 기간 시작일 |
 | `--assignee` | X | `enzo.cho(조원제)` | 담당자 Notion user ID |
 | `--no-assignee` | X | - | 담당자 미지정 |
 | `--body` | X | - | 본문 마크다운 (`\n`으로 줄바꿈, `##`=h2, `###`=h3, `-`=bullet) |

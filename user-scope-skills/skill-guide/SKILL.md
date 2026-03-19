@@ -22,8 +22,9 @@ allowed-tools: "Read, Glob, Grep, AskUserQuestion, Bash, WebFetch"
   └─ 설치됨 → 바로 추천
   └─ 미설치 → 추천 + 설치 안내
 
-2순위: 현재 설치된 스킬 (system-reminder 목록)
-  └─ 1순위에서 적합한 스킬을 못 찾았을 때만
+2순위: 현재 설치된 모든 스킬 (system-reminder 목록)
+  └─ 개인 스킬, 다른 마켓플레이스 플러그인 (data, dev, compound-engineering 등)
+  └─ ai-registry에 매칭되는 스킬이 없을 때 탐색
 ```
 
 ### ai-registry 카탈로그 로딩 (동적 하이브리드)
@@ -109,13 +110,13 @@ system-reminder의 스킬 목록에 해당 스킬 이름이 있으면 설치됨.
 > 3. [기대 결과]
 ```
 
-### 단일 추천 — system-reminder fallback (개인/기타 마켓플레이스 스킬)
+### 단일 추천 — 설치된 스킬 (ai-registry 외)
 
 ```
 ## 추천 스킬
 
 `/skill-name` — 1줄 근거
-📦 소스: 개인 스킬 | 설치됨
+📦 소스: [실제 소스 표시] | 설치됨
 
 ### 사용 예시
 > 이렇게 사용하세요:
@@ -124,7 +125,11 @@ system-reminder의 스킬 목록에 해당 스킬 이름이 있으면 설치됨.
 > 3. [기대 결과]
 ```
 
-### 파이프라인 추천
+**소스 라벨 규칙:**
+- 네임스페이스가 있는 스킬 (예: `data:analyze`, `dev:tech-decision`) → `📦 소스: {네임스페이스} 플러그인 | 설치됨`
+- 네임스페이스 없는 개인 스킬 → `📦 소스: 개인 스킬 | 설치됨`
+
+### 파이프라인 추천 (모두 설치됨)
 
 ```
 ## 추천 워크플로우
@@ -132,10 +137,32 @@ system-reminder의 스킬 목록에 해당 스킬 이름이 있으면 설치됨.
 | 순서 | 스킬 | 이유 | 소스 |
 |------|------|------|------|
 | 1 | `/first-skill` | ... | ai-registry ✅ |
-| 2 | `/second-skill` | ... | 개인 스킬 ✅ |
+| 2 | `/second-skill` | ... | data 플러그인 ✅ |
 
 ### 사용 예시
 > 이 워크플로우는 이렇게 진행하세요:
+> 1. 먼저 `/first-skill`로 [무엇을 하고]
+> 2. 산출물을 가지고 `/second-skill`로 [다음 단계]
+> 3. [최종 기대 결과]
+
+> 첫 스킬부터 순서대로 실행하세요: `/first-skill`
+```
+
+### 파이프라인 추천 (미설치 스킬 포함)
+
+```
+## 추천 워크플로우
+
+| 순서 | 스킬 | 이유 | 소스 |
+|------|------|------|------|
+| 1 | `/first-skill` | ... | ai-registry ✅ |
+| 2 | `/second-skill` | ... | ai-registry ⚠️ 미설치 |
+
+⚠️ 미설치 스킬 설치 필요:
+  /install-plugin ai-registry second-skill
+
+### 사용 예시
+> 설치 후 이 워크플로우를 진행하세요:
 > 1. 먼저 `/first-skill`로 [무엇을 하고]
 > 2. 산출물을 가지고 `/second-skill`로 [다음 단계]
 > 3. [최종 기대 결과]
@@ -152,7 +179,7 @@ system-reminder의 스킬 목록에 해당 스킬 이름이 있으면 설치됨.
 5. **미설치 시 설치 명령어를 반드시 안내한다**
 6. **best practice 사용 예시를 반드시 포함한다** — 스킬명만 던지지 않는다
 7. **단일 추천 시 1개만 추천한다** — 여러 개 나열 금지
-8. **파이프라인은 최대 3단계까지만**
+8. **파이프라인은 최대 3단계까지만** — 4개 이상 요청 시 같은 도메인의 스킬을 병합한다 (예: `create-viz` + `build-dashboard` → `build-dashboard`). 병합 시 "참고: X는 Y 단계에 통합되었습니다" 안내를 추가한다.
 9. **각 단계는 반드시 다른 도메인의 스킬이어야 한다**
 10. **스킬 목록에도 ai-registry에도 없는 스킬은 추천하지 않는다**
 
@@ -179,8 +206,8 @@ best practice에 포함할 내용:
 | "코드 리뷰 받고 싶어" | `/multi-model-review` | marketplace.json → 매칭 | 단일 |
 | "프론트엔드 개발해야 해" | `/dp-fe-agent` | marketplace.json → 매칭 | 단일 |
 | "아이디어가 모호한데 스킬 만들고 싶어" | `/ideation` → `/skill-workflow` | marketplace.json → 매칭 | 파이프라인 |
-| "데이터 분석하고 대시보드 만들어줘" | `/data:analyze` → `/data:build-dashboard` | system-reminder fallback | 파이프라인 |
-| "기술 A vs B 비교해줘" | `/dev:tech-decision` | system-reminder fallback | 단일 |
+| "데이터 분석하고 대시보드 만들어줘" | `/data:analyze` → `/data:build-dashboard` | system-reminder 매칭 | 파이프라인 |
+| "기술 A vs B 비교해줘" | `/dev:tech-decision` | system-reminder 매칭 | 단일 |
 
 ### 매칭 불가 시 출력 포맷
 

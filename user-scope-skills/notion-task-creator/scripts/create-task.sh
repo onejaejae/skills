@@ -44,6 +44,7 @@ show_help() {
     echo "  --body        본문 마크다운 (\\n으로 줄바꿈)"
     echo "  --assignee    담당자 Notion user ID (기본: enzo.cho)"
     echo "  --no-assignee 담당자 미지정"
+    echo "  --date        기간 시작일 (기본: 오늘, yyyy-mm-dd)"
     echo "  --icon        아이콘 suffix (기본: checkmark-square_gray)"
     echo "  --help        도움말"
 }
@@ -57,6 +58,7 @@ DOD=""
 BODY=""
 ICON="checkmark-square_gray"
 ASSIGNEE_ID="$DEFAULT_ASSIGNEE_ID"
+DATE_START=$(date +%Y-%m-%d)
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -69,6 +71,7 @@ while [[ $# -gt 0 ]]; do
         --body)    BODY="$2"; shift 2 ;;
         --assignee)    ASSIGNEE_ID="$2"; shift 2 ;;
         --no-assignee) ASSIGNEE_ID=""; shift ;;
+        --date)    DATE_START="$2"; shift 2 ;;
         --icon)    ICON="$2"; shift 2 ;;
         --help)    show_help; exit 0 ;;
         *)         echo -e "${RED}Error: Unknown option $1${NC}"; show_help; exit 1 ;;
@@ -125,6 +128,11 @@ build_payload() {
     # DoD (선택)
     if [[ -n "$DOD" ]]; then
         payload=$(echo "$payload" | jq --arg dod "$DOD" '.properties["DoD"] = {rich_text: [{text: {content: $dod}}]}')
+    fi
+
+    # 기간 (기본: 오늘 날짜)
+    if [[ -n "$DATE_START" ]]; then
+        payload=$(echo "$payload" | jq --arg ds "$DATE_START" '.properties["기간"] = {date: {start: $ds}}')
     fi
 
     # 담당자 (기본: enzo.cho)
@@ -214,6 +222,7 @@ echo "  Title: ${TITLE}"
 echo "  Status: ${STATUS}"
 echo "  Area: ${AREA}"
 echo "  Type: ${TYPE}"
+echo "  Date: ${DATE_START}"
 if [[ -n "$DOD" ]]; then
     echo "  DoD: ${DOD}"
 fi
