@@ -26,8 +26,10 @@ validate_prompt: |
   4. Gaps & Warnings
   5. Recommended Approach (with suggested order)
   6. Must NOT Do
+  Must include a Confidence tag (HIGH/MED/LOW with N/6 agents completed).
   Report must be under 80 lines. All file paths must be absolute or repo-relative.
   Must NOT: generate spec.json, start implementing changes, interview beyond one question.
+  Must have handled Step 0 prerequisites (empty project, scope size, input validation).
 ---
 
 # /scope — Parallel Change-Scope Analyzer
@@ -38,15 +40,49 @@ agents in parallel. Two rounds of concurrent execution, then synthesis.
 The whole point is speed: instead of sequential analysis that takes 5 minutes,
 launch everything at once and get results in ~1 minute.
 
-## Input
+## Step 0: Prerequisites and Early Exits
+
+Before launching any agents, verify the environment is analyzable.
+
+### 0a. Check for source code
+
+```
+if project root contains no source files (no .ts, .js, .py, .go, .rs, .java, .sh, etc.):
+  Output: "No source code found in this project. /scope requires an existing
+  codebase to analyze. Create some code first, then run /scope again."
+  STOP — do not proceed to Phase 1.
+```
+
+### 0b. Scope size gate
+
+Perform a quick keyword search (Grep/Glob) to estimate how many files/modules the
+requirement touches. If the estimate exceeds **20 files across 5+ directories**:
+
+```
+Output: "This change appears to affect N files across M directories.
+/scope is designed for focused changes. For large-scale rewrites, consider:
+- /specify — full spec generation with interview and structured planning
+- Breaking this into smaller scoped changes and running /scope on each"
+```
+
+Ask the user whether to proceed anyway or switch to /specify. If they choose to
+proceed, continue but add a `Confidence: LOW (broad scope)` tag to the final report.
+
+### 0c. Validate input
 
 The user provides a requirement, bug description, or feature request. Examples:
 - "I want to refactor the hook system"
 - "Add auto-fix feature to the check skill"
 - "spec.json validation is too slow"
 
-If the requirement is too vague to search for (e.g., "improve things"), ask ONE
-clarifying question. Otherwise, proceed immediately.
+**Ambiguous Input Recovery**: If the input is too vague to search for (e.g., "make it
+better", "improve things", "fix it"), attempt auto-detection before asking:
+1. Check `git diff HEAD` — if non-empty, offer to scope the uncommitted changes
+2. Check `git log --oneline -5` — if recent commits suggest a theme, offer that
+3. If still unclear, ask exactly ONE clarifying question with specific options
+   (e.g., "Did you mean: (a) the auth module, (b) the API layer, (c) something else?")
+
+Do not loop — one auto-detect attempt, then one question at most, then proceed.
 
 ## Phase 1: State Discovery
 
@@ -184,6 +220,7 @@ Do this yourself — no subagent needed.
 
 ```markdown
 ## Scope Analysis: {requirement_title}
+**Confidence: {HIGH|MED|LOW}** — {N}/6 agents completed
 
 ### 1. Change Map
 | File/Module | Change Type | Risk | Reason |
@@ -228,7 +265,9 @@ Do this yourself — no subagent needed.
 - Every file path must be **absolute** or **repo-relative** (no vague references)
 - Risk levels must be justified (not arbitrary)
 - Keep the report under 80 lines — brevity is the point
-- If any agent returned DEGRADED/SKIPPED, note it but don't block the report
+- Always include the **Confidence tag** (see Error Handling section)
+- If any agent was SKIPPED, note which agent and why in section 4 (Gaps & Warnings)
+- Do not rate risk for areas only covered by failed agents — mark as "UNKNOWN (agent N skipped)"
 
 ## When to Use /scope vs Other Skills
 
@@ -241,10 +280,40 @@ Do this yourself — no subagent needed.
 
 ## Error Handling
 
-- **Agent timeout/failure**: If any subagent returns DEGRADED or times out, include a note in the report (e.g., "Agent 2 (docs-researcher): SKIPPED — timeout") but continue synthesis with available results. Do not block the report.
+### Agent Failure Tiers (N-of-M)
+
+/scope launches 6 agents across two phases. Not all need to succeed for a useful report.
+
+| Scenario | Action | Confidence |
+|----------|--------|------------|
+| **1 agent fails** | Mark that agent as **SKIPPED** in the report. Synthesize from remaining 5. Note: "Agent N (role): SKIPPED — [reason]" in section 4. | HIGH (5/6 coverage) |
+| **2 agents fail (same phase)** | Synthesize from remaining agents. Add confidence warning: "Partial analysis — [missing perspectives] were not evaluated." | MED (4/6 coverage) |
+| **2 agents fail (cross-phase)** | Same as above but note which phase was degraded. | MED (4/6 coverage) |
+| **3+ agents fail** | Produce a **partial report** with available results only. Prepend: "LOW CONFIDENCE — only N/6 agents returned results. Consider re-running or using /specify for thorough analysis." Do NOT issue risk ratings for areas covered by failed agents. | LOW (<=3/6 coverage) |
+| **All Phase 1 agents fail** | Cannot proceed to Phase 2 (no context to inject). Report the failure and suggest retry or manual exploration. | NONE — abort |
+| **All agents fail** | Report the failure. Suggest the user retry or use a different approach. | NONE — abort |
+
+When an agent is SKIPPED, treat its coverage area as **unknown risk** in the synthesis.
+Do not assume the area is safe just because no agent flagged it.
+
+### Confidence Tag
+
+Every report must include a confidence tag after the title:
+
+```
+## Scope Analysis: {requirement_title}
+**Confidence: {HIGH|MED|LOW}** — {N}/6 agents completed{, broad scope | if applicable}
+```
+
+Confidence is the minimum of:
+- Agent coverage: HIGH (5-6/6), MED (3-4/6), LOW (1-2/6)
+- Scope breadth: if Step 0b flagged broad scope, cap at LOW
+
+### Other Error Cases
+
 - **No relevant code found**: If code-explorer finds nothing, report "No directly related code found" in the Change Map and flag it as a HIGH risk gap.
 - **`.dev/rules/` missing**: Skip Step 1B entirely and note "No rules configured — /check skipped" in section 4.
-- **Vague input**: Ask exactly ONE clarifying question, then proceed. Do not loop.
+- **Vague input**: Follow the Ambiguous Input Recovery procedure in Step 0c.
 
 ## Constraints
 

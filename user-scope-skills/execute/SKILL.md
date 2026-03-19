@@ -73,27 +73,64 @@ SESSION_ID="[session ID from UserPromptSubmit hook]"
    → if state.spec field exists, spec_path = state.spec
 
 If none found → error: "spec.json not found. Please generate one first with /specify or /quick-plan."
+STOP — do not proceed past Phase 0.
 ```
 
-Read spec.json and validate:
+### 0.1b Validate Spec (Gate)
 
-```bash
-hoyeon-cli spec validate {spec_path}
-hoyeon-cli spec check {spec_path}
+Verify spec file exists and is structurally valid before proceeding:
+
+```
+# File existence check
+IF spec_path file does not exist on disk:
+  print("ERROR: spec.json not found at {spec_path}.")
+  print("Generate one first with /specify or /quick-plan.")
+  STOP — do not proceed past Phase 0.
+
+# Schema validation
+validate_output = Bash("hoyeon-cli spec validate {spec_path} 2>&1")
+IF exit_code != 0:
+  print("ERROR: spec.json validation failed:")
+  print(validate_output)
+  print("Fix the spec and re-run /execute.")
+  STOP — do not proceed past Phase 0.
+
+# Internal consistency check
+check_output = Bash("hoyeon-cli spec check {spec_path} 2>&1")
+IF exit_code != 0:
+  print("WARNING: spec.json consistency check found issues:")
+  print(check_output)
+  print("Proceeding — will re-check at end.")
 ```
 
 **Read `spec.meta.type`** (default `"dev"` if absent):
 
 ```
 meta_type = spec.meta.type ?? "dev"
+
+# Validate meta.type is a known value
+IF meta_type NOT IN ["dev", "plain"]:
+  print("ERROR: Unknown meta.type '{meta_type}'. Expected 'dev' or 'plain'.")
+  STOP — do not proceed past Phase 0.
 ```
 
 ### 0.2 Get Execution Plan
 
 ```bash
 plan_text = Bash("hoyeon-cli spec plan {spec_path}")
-plan_json = Bash("hoyeon-cli spec plan {spec_path} --format slim")
+plan_json = Bash("hoyeon-cli spec plan {spec_path} --format slim 2>&1")
+
+# Guard: parse plan JSON safely
+IF plan_json exit_code != 0 OR plan_json is empty:
+  print("ERROR: hoyeon-cli spec plan failed:")
+  print(plan_json)
+  STOP — do not proceed past Phase 0.
+
 plan = JSON.parse(plan_json)
+IF plan.rounds is not an array OR plan.rounds is undefined:
+  print("ERROR: spec plan returned unexpected structure (missing rounds array).")
+  print("Raw output: {plan_json}")
+  STOP — do not proceed past Phase 0.
 ```
 
 Display plan_text to user. Filter out already-done tasks:
@@ -174,14 +211,55 @@ plain.md owns: flexible dispatch (direct/Skill/Agent), Final Verify, and report.
 
 ## Error Handling
 
+### Phase 0 Errors (HALT before execution)
+
 | Error | Recovery |
 |-------|----------|
-| `hoyeon-cli spec validate` fails | Print validation errors, ask user to fix spec.json, HALT |
-| `hoyeon-cli spec plan` returns empty rounds | Print "No actionable tasks found", HALT |
-| `hoyeon-cli spec check` fails mid-execution | Log to audit.md, continue (check again at end) |
-| Worker task crashes (non-zero exit) | Record failure in audit.md, proceed to triage per dev.md |
+| spec.json file not found on disk | Print path + guidance ("Generate one with /specify or /quick-plan"). STOP |
+| `hoyeon-cli spec validate` fails | Print validation errors, ask user to fix spec.json. STOP |
+| `hoyeon-cli spec plan` returns empty rounds | Print "No actionable tasks found". STOP |
+| `meta.type` is unknown value | Print "Unknown meta.type '{value}'. Expected 'dev' or 'plain'." STOP |
 | Pre-work "Abort" selected | HALT immediately with message |
 | Session ID missing ($CLAUDE_SESSION_ID unset) | Warn user, proceed without session state (no resume support) |
+
+### Execution Errors (during Phase 1+)
+
+| Error | Recovery |
+|-------|----------|
+| `hoyeon-cli spec check` fails mid-execution | Log to audit.md, continue (check again at end) |
+| Worker task crashes (non-zero exit) | Record failure in audit.md, proceed to triage per dev.md (standard) or HALT (quick/plain) |
+| Worker agent timeout (no response) | Treat as crash — record "TIMEOUT" in audit.md, same recovery path as crash |
+| Worker returns malformed output (unparseable JSON) | Log raw output to audit.md, treat as FAILED with reason "malformed output — could not parse worker result" |
+| `hoyeon-cli spec plan --format slim` returns unparseable JSON | Print raw CLI output as diagnostic, HALT with "CLI returned unexpected output" |
+| `hoyeon-cli spec task` update fails | Log to audit.md, retry once. If still fails, HALT |
+
+### Agent Failure Handling (Degraded Mode)
+
+Inspired by /tribunal's degraded-mode pattern. When an agent fails:
+
+```
+IF agent returns empty OR errors OR times out:
+  1. Record failure: append to audit.md with agent type, task_id, error details
+  2. Mark tracking task: TaskUpdate(taskId, status="cancelled", reason="agent failure")
+
+  # Dev mode (standard): attempt recovery
+  IF depth == "standard":
+    IF agent_type == "worker":
+      reconcile(task_id, {status: "FAILED", reason: "agent crash/timeout"}, attempt=0)
+    ELIF agent_type == "verify":
+      # Skip verification, proceed to commit with warning
+      log_to_audit("DEGRADED: Verify skipped for {task_id} due to agent failure")
+      TaskUpdate(verify_taskId, status="completed")
+      # Commit proceeds — Final Verify will catch issues
+    ELIF agent_type == "code-reviewer":
+      log_to_audit("DEGRADED: Code review skipped due to agent failure")
+      TaskUpdate(cr, status="completed")
+      # Final Verify still runs
+
+  # Dev mode (quick) or plain mode: no recovery
+  ELSE:
+    HALT with "Agent failure for {task_id}. No recovery in {mode} mode."
+```
 
 ## Generic Rules
 
