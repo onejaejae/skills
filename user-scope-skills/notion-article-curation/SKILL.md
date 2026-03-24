@@ -34,31 +34,68 @@ allowed-tools: "Bash"
 
 사용자로부터 링크 목록을 입력받는다. 형식 무관 (줄바꿈, 쉼표, 리스트 등).
 
-### Step 2: 중복 체크
+### Step 2: 중복 체크 (URL 정확 매칭)
 
-기존 DB에서 URL을 조회하여 이미 존재하는 링크를 제외한다.
+2단계 검증으로 URL 정확 매칭을 수행한다.
 
+#### Step 2-1: URL 정규화
+
+각 입력 URL을 정규화한다:
 ```text
-notion-search로 각 URL의 핵심 키워드 검색
-  data_source_url: "collection://65cc9079-6307-4ab3-96ed-56583f569000"
-→ 기존 URL과 정확히 일치하는 항목 제외
-→ 새 링크만 남김
+정규화 규칙:
+1. query parameter 제거 (utm_*, rcm, source 등)
+2. trailing slash 제거
+3. fragment(#) 제거
+4. scheme 통일 (http → https)
+
+예: https://linkedin.com/posts/user_title-123?utm_source=share&rcm=abc
+  → https://linkedin.com/posts/user_title-123
 ```
 
-**중복 판정 기준**: URL의 핵심 부분(도메인 + path)이 동일하면 중복. query parameter(utm 등) 차이는 무시.
+#### Step 2-2: notion-search로 후보 검색
 
-**검색 키워드 추출 규칙**:
-- LinkedIn: 게시자 이름 + 핵심 단어 (예: `woohyungchoi claude code`)
-- 블로그: 제목의 핵심 단어 2-3개
-- 전체 URL로 검색하지 않음 — URL 인코딩된 문자가 검색을 방해함
+각 URL에서 키워드를 추출하여 notion-search로 후보를 검색한다.
 
-**Rate Limit 주의**: notion-search를 **최대 5개씩** 병렬 호출. 한 번에 10개 이상 호출하면 429 에러 발생.
+**검색 키워드 추출**:
+- LinkedIn: 게시자 ID + 핵심 단어 1-2개 (예: `leekh929 비서실장`)
+- 블로그/뉴스: 도메인 + 제목 키워드 (예: `hada.io ClawTeam`)
+- 전체 URL로 검색하지 않음 — URL 인코딩이 검색을 방해
 
-결과를 사용자에게 보고:
+```text
+notion-search:
+  query: "<추출된 키워드>"
+  data_source_url: "collection://65cc9079-6307-4ab3-96ed-56583f569000"
+  page_size: 5
+  max_highlight_length: 0
+```
+
+**Rate Limit**: notion-search **최대 5개씩** 병렬. 10개+ 동시 호출 시 429 에러.
+
+#### Step 2-3: notion-fetch로 URL 정확 비교
+
+검색 결과의 각 후보 페이지를 `notion-fetch`로 조회하여 `userDefined:URL` 값을 추출하고, 정규화된 URL과 **문자열 정확 비교**한다.
+
+```text
+notion-fetch로 후보 페이지 조회
+  → properties.userDefined:URL 추출
+  → 정규화 후 입력 URL과 비교
+  → 일치하면 중복 확정
+```
+
+**notion-fetch는 최대 5개씩** 병렬 호출.
+
+**중복 판정**: 정규화된 URL이 정확히 일치하면 중복. 부분 일치나 유사도는 사용하지 않음.
+
+#### 중복 체크 결과 보고
+
 ```text
 📋 입력: N개 링크
-  ├─ 🔄 중복: X개 (스킵)
+  ├─ 🔄 중복: X개 (스킵) — 정확 URL 매칭
   └─ ✅ 신규: Y개 (추가 예정)
+
+중복 상세:
+  - [URL 1] → 기존: "아티클 제목" (Notion 페이지 ID)
+  - [URL 2] → 기존: "아티클 제목" (Notion 페이지 ID)
 ```
 
 ### Step 3: 콘텐츠 분석 및 분류
