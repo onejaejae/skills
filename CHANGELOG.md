@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-04-02
+
+### Added
+- **`calendar-today` skill 추가** (user-scope-skills)
+  - 오늘/이번 주/내일 일정 조회. '오늘 일정', 'calendar', '스케줄' 트리거
+- **`canary` skill 추가** (user-scope-skills)
+  - 배포 후 실시간 모니터링 및 베이스라인 비교, 헬스 스코어링
+  - 관찰 전용 — 코드 변경 없음
+- **`cso` skill 추가** (user-scope-skills)
+  - 보안 감사, 취약점 스캔, 위협 모델링
+  - Daily(간단 스캔) / Comprehensive(월간 심층 감사) 두 가지 모드
+- **`investigate` skill 추가** (user-scope-skills)
+  - 복잡하고 재현이 어려운 버그 디버깅
+  - 가설 기반 체계적 조사 방식
+- **`qmd` skill 추가** (user-scope-skills)
+  - 마크다운 지식 베이스, 노트, 문서 검색
+  - `npm install -g @tobilu/qmd` 설치 필요
+- **`plannotator-compound` skill 추가** (user-scope-skills)
+  - Plannotator 플랜 아카이브 분석으로 거절 패턴 및 피드백 추출
+
 ## [2.0.0] - 2026-02-27
 
 ### Added
