@@ -1,0 +1,82 @@
+[
+  {
+    "query": "can you use my logged in chrome session to read this linkedin post and summarize it? the url is https://www.linkedin.com/posts/subin-an-841975110_%EC%A3%BC%EB%A7%90%EB%8F%99%EC%95%88-%EB%A8%B8%EB%A6%BF%EC%86%8D%EC%97%90-%EB%96%A0%EC%98%A4%EB%A5%B8-%EC%BB%A8%EC%85%89%EC%9D%B4-%EC%9E%88%EC%96%B4%EC%84%9C-%EC%9E%AC%EB%B0%8C%EA%B2%8C-ai-coding-cli%EB%A5%BC-share-7436405757132242944-i3Su/",
+    "should_trigger": true
+  },
+  {
+    "query": "i need the action items from this private notion doc in my workspace. i can see it when i'm logged into chrome but not in incognito.",
+    "should_trigger": true
+  },
+  {
+    "query": "open the internal sales dashboard that's behind sso in my existing browser profile and tell me which metric dropped yesterday",
+    "should_trigger": true
+  },
+  {
+    "query": "pull the text out of this x post from my logged-in profile and tell me what the author is announcing",
+    "should_trigger": true
+  },
+  {
+    "query": "i think this page is js-rendered and only shows the real content after login. can you inspect it with chromux using my current chrome profile?",
+    "should_trigger": true
+  },
+  {
+    "query": "i need to read a paywalled article, but i'm already signed in in chrome. use that browser session and summarize the article",
+    "should_trigger": true
+  },
+  {
+    "query": "can you use playwright with a persistent user-data-dir to check the private page i have open in chrome right now?",
+    "should_trigger": true
+  },
+  {
+    "query": "my team page in slack has the latest incident notes, but public web search can't see it. use my authenticated browser state and extract the summary",
+    "should_trigger": true
+  },
+  {
+    "query": "i pasted the text of the page below. please summarize it and extract the tasks",
+    "should_trigger": false
+  },
+  {
+    "query": "can you find the best way to use chrome profiles with playwright? i'm not trying to access any private page, just looking for docs",
+    "should_trigger": false
+  },
+  {
+    "query": "search the web for the latest linkedin api changes and summarize official docs",
+    "should_trigger": false
+  },
+  {
+    "query": "extract the text from this pdf in my downloads folder",
+    "should_trigger": false
+  },
+  {
+    "query": "i need general web research on ai coding tools, preferably recent posts and benchmarks",
+    "should_trigger": false
+  },
+  {
+    "query": "can you inspect this notion page? i can share the content if needed, but it isn't behind login",
+    "should_trigger": false
+  },
+  {
+    "query": "open this public github issue and summarize the discussion",
+    "should_trigger": false
+  },
+  {
+    "query": "i want to compare chrome user-data-dir vs storageState for playwright, no authenticated target page involved",
+    "should_trigger": false
+  },
+  {
+    "query": "what's the current score for the lakers game tonight?",
+    "should_trigger": false
+  },
+  {
+    "query": "help me write a scraper for public blog pages without logins",
+    "should_trigger": false
+  },
+  {
+    "query": "here's a screenshot of a private dashboard. can you explain what it means?",
+    "should_trigger": false
+  },
+  {
+    "query": "i need to research a public company press release and cite sources",
+    "should_trigger": false
+  }
+]

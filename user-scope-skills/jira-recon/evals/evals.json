@@ -1,0 +1,23 @@
+{
+  "skill_name": "jira-recon",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "/jira:recon DPHRS-8",
+      "expected_output": "7-section research report at ~/.claude/specs/DPHRS-8-research.md with: Overview metadata table, Requirements/User Story from Notion specs, 3 subtask breakdown (DPHRS-42/43/44) with GitHub issue links, Notion spec content (WITH-RBAC-1, 기본역할재정의), Open Questions from specs, complete Links Index. Confidence HIGH.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "/jira:recon https://khc.atlassian.net/browse/DPHRS-8?atlOrigin=eyJpIjoiYWVjMDU0ZDNjOTQwNGQwMWI3ZGUyMjE1MzdmNTRiNTUiLCJwIjoiaiJ9",
+      "expected_output": "Same as eval 0 — correctly parses DPHRS-8 from full URL with query params. Output identical to bare key input.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "/jira:recon INVALID-999",
+      "expected_output": "Early exit with clear error message indicating ticket not found. No research.md file created. No agents spawned.",
+      "files": []
+    }
+  ]
+}
