@@ -1,0 +1,38 @@
+{
+  "skill_name": "logged-in-browser-research",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Please open this LinkedIn post using my logged-in Chrome profile and summarize the main point, the tool mentioned, and any links or product names in the post: https://www.linkedin.com/posts/subin-an-841975110_%EC%A3%BC%EB%A7%90%EB%8F%99%EC%95%88-%EB%A8%B8%EB%A6%BF%EC%86%8D%EC%97%90-%EB%96%A0%EC%98%A4%EB%A5%B8-%EC%BB%A8%EC%85%89%EC%9D%B4-%EC%9E%88%EC%96%B4%EC%84%9C-%EC%9E%AC%EB%B0%8C%EA%B2%8C-ai-coding-cli%EB%A5%BC-share-7436405757132242944-i3Su/",
+      "expected_output": "The assistant accesses the page through the authenticated browser session, extracts the visible post text, and returns a concise summary with the access status and evidence URL.",
+      "files": [],
+      "expectations": [
+        "The output states whether the page was accessed through an existing authenticated browser session or that access was blocked",
+        "The output includes the page URL or a clear reference to the LinkedIn post",
+        "The output summarizes the post content without inventing missing details"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need you to inspect this private Notion page in my workspace from my logged-in browser and pull out the action items, owners, and due dates: https://www.notion.so/example-private-page",
+      "expected_output": "The assistant reuses the logged-in browser context, extracts the visible Notion content, and returns action items, owners, and due dates with notes about any missing fields.",
+      "files": [],
+      "expectations": [
+        "The output includes extracted action items",
+        "The output includes owners or explicitly says they were not visible",
+        "The output includes due dates or explicitly says they were not visible"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "This dashboard is only visible after SSO in my Chrome profile. Use that session, open the page, and tell me what KPIs changed this week. If the page is partially rendered, keep going until you know whether the problem is loading or access.",
+      "expected_output": "The assistant uses the browser session, distinguishes render issues from access issues, and reports KPI changes or a precise blocker if the content cannot be fully loaded.",
+      "files": [],
+      "expectations": [
+        "The output distinguishes between access failure and partial rendering",
+        "The output reports KPI changes or states that they were not visible",
+        "The output does not claim completion if the page remained blocked"
+      ]
+    }
+  ]
+}

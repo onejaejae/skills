@@ -16,6 +16,7 @@ Step 1: PR 정보 수집 → 요약 출력 → [승인 대기]
 Step 2: 변경사항 분석 → 분석 결과 출력 → [승인 대기]
 Step 3: 관점별 리뷰 → 발견사항 출력 → [승인 대기]
 Step 4: 코멘트 정리 → 코멘트 목록 출력 → [승인 대기] → 제출
+Step 5: 리뷰 파일 저장 → .dev/pr-reviews/{id}-review.md (file handoff)
 ```
 
 ---
@@ -305,6 +306,63 @@ P5: 이 캐싱 TTL을 5분으로 설정한 배경이 궁금해요.
 
 ---
 
+## Step 5: 리뷰 파일 저장 (File Handoff)
+
+리뷰 결과를 `.dev/pr-reviews/`에 구조화된 마크다운으로 저장한다.
+이 파일은 다른 스킬(/compound, /session-wrap 등)이 소비할 수 있는 handoff 아티팩트다.
+
+### 저장 경로
+```
+.dev/pr-reviews/{identifier}-review.md
+```
+
+- GitHub PR: `{identifier}` = PR 번호 (예: `pr-123-review.md`)
+- 로컬 브랜치: `{identifier}` = 브랜치명 (예: `feature-DPT-1234-add-auth-review.md`)
+
+### 파일 구조
+
+```markdown
+# PR Review: {PR 제목 또는 브랜치명}
+
+**Date**: {YYYY-MM-DD}
+**Reviewer**: Claude (pr-reviewer)
+**Decision**: {APPROVE / REQUEST_CHANGES / COMMENT}
+**PR**: {PR URL 또는 브랜치명}
+
+## Summary
+{1-2줄 요약: 무엇을 변경했고 전체적으로 어떤 수준인가}
+
+## Findings
+
+### P1 (반드시 반영)
+- {파일:라인} — {요약}
+
+### P2 (반영 필요)
+- {파일:라인} — {요약}
+
+### P3-P5 (참고)
+- {파일:라인} — {요약}
+
+## Stats
+- Files reviewed: {N}
+- Comments: P1={n} P2={n} P3={n} P4={n} P5={n}
+- Lines: +{additions}/-{deletions}
+```
+
+### 저장 실행
+```bash
+mkdir -p .dev/pr-reviews
+```
+
+Write 도구로 리뷰 파일을 저장한 뒤, 사용자에게 저장 경로를 알려준다:
+```
+리뷰 파일이 저장되었습니다: .dev/pr-reviews/{identifier}-review.md
+```
+
+이 파일은 git에 커밋하여 리뷰 히스토리로 남기거나, .gitignore에 추가하여 로컬 참고용으로 사용할 수 있다.
+
+---
+
 ## 리뷰 완료 후
 
 1. **전체 요약 코멘트 작성**: 리뷰 내용 요약, 잘된 점, 개선 필요 사항
@@ -312,6 +370,7 @@ P5: 이 캐싱 TTL을 5분으로 설정한 배경이 궁금해요.
    - P1 또는 P2가 있으면 → **REQUEST_CHANGES**
    - P3 이하만 있으면 → **APPROVE** 또는 COMMENT
 3. **후속 논의 필요 시**: P3 항목에 대해 직접 대화나 미팅 제안
+4. **리뷰 파일 확인**: `.dev/pr-reviews/`에 리뷰 파일이 저장되었는지 확인
 
 ---
 

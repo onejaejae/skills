@@ -1,0 +1,73 @@
+{
+  "skill_name": "jira-assess",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "agent-fallback-engagement",
+      "prompt": "You are executing /jira:assess for ticket DPHRS-TEST. You just started Phase 1 and dispatched 3 Explore subagents (schema-model-finder, service-api-finder, test-config-finder) in parallel. ALL THREE agents returned the identical error: 'You've hit your limit · resets 1pm (Asia/Seoul)'. Research report specs/DPHRS-TEST-research.md exists and has Confidence: MED. The target project is clue-api at /Users/chowonjae/Desktop/projects/clue-api. What do you do next? Provide a concrete step-by-step plan with the actual tool calls you would make. Do not actually execute them — just describe the plan in detail.",
+      "expected_output": "Subagent recognizes Agent Fallback trigger condition, proposes direct Glob/Grep/Read/Bash calls, explicitly caps Confidence at MED, plans to save results to /tmp/DPHRS-TEST-phase1-agent{1,2,3}.md",
+      "files": [],
+      "expectations": [
+        "Response identifies the error as a quota/rate-limit infrastructure failure (not a project/code error)",
+        "Response explicitly engages the 'Agent Fallback (쿼터 소진 / Rate Limit)' procedure from the skill",
+        "Response proposes direct Glob/Grep calls to replace schema-model-finder agent (e.g., Glob for models/**/*.py, Grep for class patterns)",
+        "Response proposes direct Glob/Grep calls to replace service-api-finder agent (e.g., Glob for services/**/*.py, controllers/**/*.py)",
+        "Response proposes direct Glob/Grep/Bash calls to replace test-config-finder agent (e.g., tests/**/*.py, conftest.py)",
+        "Response explicitly states Confidence will be capped at MED due to fallback (not HIGH)",
+        "Response mentions saving results to /tmp/DPHRS-TEST-phase1-agent{N}.md files for Phase 2 handoff compatibility",
+        "Response does NOT STOP the skill — it continues with fallback instead of aborting"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "cross-project-validation",
+      "prompt": "You are executing Phase 0 of /jira:assess for ticket DPHRS-TEST. The research report specs/DPHRS-TEST-research.md has been loaded. Its Section 1 (Overview) shows the ticket title is '[통합홈] 사용자 프로필 API 개선 - 프로필 사진 업로드 지원'. Subtask prefixes observed in research include '[BE/with-api]' and '[FE/with-client]'. Your current working directory is /Users/chowonjae/Desktop/projects/clue-api which contains a CLAUDE.md identifying it as 'clue-api'. What do you do? Describe the decision and any tool calls you would make.",
+      "expected_output": "Subagent detects project mismatch between ticket hint ([통합홈]/with-api) and cwd (clue-api), stops to ask user via AskUserQuestion, does NOT proceed to Phase 1 with cwd",
+      "files": [],
+      "expectations": [
+        "Response identifies '[통합홈]' as a project hint pointing to with-api",
+        "Response identifies cwd as clue-api based on the CLAUDE.md evidence",
+        "Response explicitly detects the mismatch between ticket_project_hint and cwd_project",
+        "Response invokes the cross-validation rule (Hard Rule #13) and refuses to auto-proceed with cwd",
+        "Response proposes asking the user via AskUserQuestion for the correct project path",
+        "Response does NOT start Phase 1 (agent dispatch) until the project is confirmed",
+        "Response references DPHRS-8 E2E precedent or explains why cross-validation exists"
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "section6-format-compliance",
+      "prompt": "You are in Phase 3 of /jira:assess synthesizing Section 6 for ticket DPHRS-TEST. Given the following Phase 1/2 results, generate ONLY Section 6 (Task Definition Candidates) as Markdown following the skill's rules.\n\nRequirements (from research):\n- R1: Add new REST API endpoint POST /api/v1/users/{id}/profile-image for profile image upload\n- R2: Create UserProfileImage DB table with columns (id, user_id, s3_key, uploaded_at)\n- R3: Integrate with S3 bucket for storage\n- R4: Add unit tests for new endpoint\n- R5: Update OpenAPI docs\n\nGap Analysis (from Agent 5):\n- R1: MISSING (no upload endpoint exists)\n- R2: MISSING (no UserProfileImage model)\n- R3: PARTIAL (S3 client exists in main/common/s3.py but no profile image usage)\n- R4: MISSING (no tests for R1)\n- R5: MISSING (OpenAPI generation script exists but docs outdated)\n\nImpact Matrix (from Agent 6):\n- main/controllers/users/profile.py — CREATE — MED risk — 2h\n- main/models/user.py — MODIFY — LOW risk — 1h\n- migrations/versions/xxx_add_profile_image.py — CREATE — LOW risk — 0.5h\n- main/services/user_service.py — MODIFY — LOW risk — 1h\n- tests/controllers/users/test_profile.py — CREATE — LOW risk — 2h\n- docs/openapi.yaml — MODIFY — LOW risk — 0.5h\n\nScope A estimate: 7h, Scope B estimate: 12h\n\nProduce ONLY the Section 6 markdown. Do not include any other sections or explanation text around it.",
+      "expected_output": "A well-formed Section 6 markdown table with 3-8 tasks, each with specific DoD, effort in {hours}h format, Assignee as '-', Priority as HIGH/MED/LOW, Dependencies using #N notation",
+      "files": [],
+      "expectations": [
+        "Output contains a Markdown table with header '| # | Task | Priority | Assignee | Dependencies | Effort | DoD |'",
+        "Number of tasks is between 3 and 8 inclusive (per assess Section 6 rules on appropriate task count)",
+        "DB migration is separated into its own task (per Hard Rule: migrations are always separate rollback units)",
+        "Every task has Effort in the '{number}h' format (e.g., '2h', '1.5h') — not 'MED' or vague strings",
+        "Every task has Assignee set to '-' (blank marker for jira:dispatch default)",
+        "Every task Priority is one of HIGH, MED, LOW (not P0/P1/P2 or other schemes)",
+        "At least one task references another task via #N notation in Dependencies (e.g., '#1')",
+        "At least one DoD contains a specific file path hint (e.g., 'main/controllers/users/profile.py')",
+        "No DoD uses generic phrasing like 'works correctly' or 'is implemented' — all DoDs are concrete and verifiable",
+        "Output does NOT create tasks for requirements marked DONE in the gap analysis"
+      ]
+    },
+    {
+      "id": 4,
+      "eval_name": "effort-reconciliation",
+      "prompt": "You are in Phase 3 of /jira:assess synthesizing Section 5 (Effort Estimation) for ticket DPHRS-TEST. Agent 6 (impact-risk-assessor) returned the following file-level effort estimates:\n\n| File | Change | Risk | Effort |\n|------|--------|------|--------|\n| main/services/batch/processor.py | MODIFY | HIGH | 18h |\n| main/models/batch_job.py | MODIFY | MED | 1.5h |\n| main/controllers/batch/runner.py | CREATE | MED | 3h |\n| migrations/versions/xxx_batch.py | CREATE | LOW | 0.5h |\n| tests/services/batch/test_processor.py | CREATE | LOW | 5h |\n| main/common/logging.py | MODIFY | LOW | 0.5h |\n\nScope A (minimum): 23h\nScope B (extended with docs/tests): 48h\n\nApply the skill's Effort Reconciliation rules and produce ONLY Section 5 as Markdown. Include any HIGH_VARIANCE flags, buffers, confidence intervals, or warnings that the rules require. Do not include other sections.",
+      "expected_output": "Section 5 that detects HIGH_VARIANCE (18h/0.5h = 36x), flags the 18h task as exceeding 20h threshold (or near it) warranting split review, adds 25% buffer to Scope A, mentions ±30% confidence interval, warns that Scope B is >2x Scope A (2.09x)",
+      "files": [],
+      "expectations": [
+        "Response detects the variance ratio exceeds 5x (actual ratio is 36x: 18h/0.5h)",
+        "Response explicitly flags HIGH_VARIANCE or equivalent warning",
+        "Response adds approximately 25% buffer to Scope A total (e.g., 23h → ~28.75h) due to HIGH_VARIANCE rule",
+        "Response mentions a ±30% confidence interval on the effort estimate",
+        "Response warns that Scope B (48h) exceeds 2x Scope A (23h) with ratio 2.09x — triggering the explicit-annotation rule",
+        "Response flags the 18h file estimate as near the 20h outlier threshold and suggests splitting (or notes it warrants review)",
+        "Response clarifies that the 25% buffer applies ONLY to Section 5 totals, NOT to individual Section 6 task efforts (to avoid dispatch distortion)"
+      ]
+    }
+  ]
+}
