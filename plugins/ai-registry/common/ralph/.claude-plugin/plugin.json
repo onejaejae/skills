@@ -1,0 +1,5 @@
+{
+  "name": "ralph",
+  "description": "DoD 기반 반복 완료 루프 — Definition of Done 검증과 Stop hook 재주입으로 작업을 자율 완료까지 반복",
+  "version": "1.0.0"
+}
